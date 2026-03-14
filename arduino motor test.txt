@@ -1,0 +1,66 @@
+#include <Arduino.h>\n\n// Standalone Motor Test - Upload this first to test wiring/power\n// BEFORE setup(): Open Serial Monitor 9600 baud, type F/B/L/R/S to test wiring/power
+// Open Serial Monitor 9600 baud, type F/B/L/R/S
+
+int motorA1 = 5;  // Right forward
+int motorA2 = 6;  // Right backward
+int motorB1 = 9;  // Left forward
+int motorB2 = 10; // Left backward
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(motorA1, OUTPUT);
+  pinMode(motorA2, OUTPUT);
+  pinMode(motorB1, OUTPUT); 
+  pinMode(motorB2, OUTPUT);
+  Serial.println("Motor Test Ready! Send: F/B/L/R/S");
+}
+
+void stopMotors() {
+  digitalWrite(motorA1, LOW);
+  digitalWrite(motorA2, LOW);
+  digitalWrite(motorB1, LOW);
+  digitalWrite(motorB2, LOW);
+}
+
+void loop() {
+  if (Serial.available()) {
+    char cmd = Serial.read();
+    Serial.print("Cmd: ");
+    Serial.println(cmd);
+
+    switch(cmd) {
+      case 'F':
+        Serial.println("FORWARD");
+        digitalWrite(motorA1, HIGH);
+        digitalWrite(motorA2, LOW);
+        digitalWrite(motorB1, HIGH);
+        digitalWrite(motorB2, LOW);
+        break;
+      case 'B':
+        Serial.println("BACKWARD");
+        digitalWrite(motorA1, LOW);
+        digitalWrite(motorA2, HIGH);
+        digitalWrite(motorB1, LOW);
+        digitalWrite(motorB2, HIGH);
+        break;
+      case 'L':
+        Serial.println("LEFT TURN");
+        digitalWrite(motorA1, HIGH);  // Right fwd
+        digitalWrite(motorA2, LOW);
+        digitalWrite(motorB1, LOW);   // Left stop
+        digitalWrite(motorB2, LOW);
+        break;
+      case 'R':
+        Serial.println("RIGHT TURN");
+        digitalWrite(motorA1, LOW);   // Right stop
+        digitalWrite(motorA2, LOW);
+        digitalWrite(motorB1, HIGH);  // Left fwd
+        digitalWrite(motorB2, LOW);
+        break;
+      case 'S':
+        Serial.println("STOP");
+        stopMotors();
+        break;
+    }
+  }
+}
