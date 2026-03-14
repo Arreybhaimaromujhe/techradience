@@ -1,0 +1,15 @@
+BLUETOOTH
+gnd-gnd
+vcc-5v
+rx-rx
+tx-tx
+
+MOTOR DRIVER
+motor 1
+out1-out2
+motor 2
+out3-4
+in1-7
+int2-8
+int3-9
+int4-10
