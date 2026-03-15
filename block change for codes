@@ -1,0 +1,225 @@
+# Gesture-Controlled Robot -- Expected Competition Code Changes
+
+Base system: OpenCV + MediaPipe gesture detection → HC‑05 Bluetooth →
+Arduino motor commands
+
+Your original command system:
+
+  Command   Meaning
+  --------- ----------
+  F         Forward
+  B         Backward
+  L         Left
+  R         Right
+  S         Stop
+
+Base mapping function:
+
+``` python
+def get_command(fingers):
+    if fingers == [0,1,0,0,0]: return 'F'
+    elif fingers == [0,1,1,0,0]: return 'B'
+    elif fingers == [0,1,0,0,1]: return 'L'
+    elif fingers == [0,1,1,1,1]: return 'R'
+    else: return 'S'
+```
+
+------------------------------------------------------------------------
+
+# 1️⃣ Swap Gesture Controls
+
+Judges often ask to swap gestures.
+
+Example request: \> Make `[0,1,1,0,0]` go Forward instead of Backward.
+
+### Code Change
+
+``` python
+def get_command(fingers):
+    if fingers == [0,1,0,0,0]: return 'B'
+    elif fingers == [0,1,1,0,0]: return 'F'
+    elif fingers == [0,1,0,0,1]: return 'L'
+    elif fingers == [0,1,1,1,1]: return 'R'
+    else: return 'S'
+```
+
+------------------------------------------------------------------------
+
+# 2️⃣ Add a New Gesture (Spin Mode)
+
+Judges might say: \> Add a gesture to spin the robot.
+
+Example gesture: all fingers up `[1,1,1,1,1]`
+
+### Code Change
+
+``` python
+def get_command(fingers):
+    if fingers == [0,1,0,0,0]: return 'F'
+    elif fingers == [0,1,1,0,0]: return 'B'
+    elif fingers == [0,1,0,0,1]: return 'L'
+    elif fingers == [0,1,1,1,1]: return 'R'
+    elif fingers == [1,1,1,1,1]: return 'X'  # Spin command
+    else: return 'S'
+```
+
+Arduino will then interpret `X` as spin.
+
+------------------------------------------------------------------------
+
+# 3️⃣ Reverse Forward and Backward
+
+Sometimes judges want motor direction reversed.
+
+### Code Change
+
+``` python
+def get_command(fingers):
+    if fingers == [0,1,0,0,0]: return 'B'
+    elif fingers == [0,1,1,0,0]: return 'F'
+    elif fingers == [0,1,0,0,1]: return 'L'
+    elif fingers == [0,1,1,1,1]: return 'R'
+    else: return 'S'
+```
+
+------------------------------------------------------------------------
+
+# 4️⃣ Add Speed Mode
+
+Judge may ask: \> Add slow movement mode.
+
+Example gesture `[0,1,1,1,0]`
+
+### Code Change
+
+``` python
+def get_command(fingers):
+    if fingers == [0,1,0,0,0]: return 'F'
+    elif fingers == [0,1,1,0,0]: return 'B'
+    elif fingers == [0,1,0,0,1]: return 'L'
+    elif fingers == [0,1,1,1,1]: return 'R'
+    elif fingers == [0,1,1,1,0]: return 'V'  # Slow speed
+    else: return 'S'
+```
+
+------------------------------------------------------------------------
+
+# 5️⃣ Change Default Behavior When No Gesture
+
+Current behavior: Robot stops.
+
+``` python
+else:
+    return 'S'
+```
+
+Judge may say: \> Make robot continue last command.
+
+### Code Change
+
+Replace this:
+
+``` python
+else: return 'S'
+```
+
+With:
+
+``` python
+else: return last_command
+```
+
+------------------------------------------------------------------------
+
+# 6️⃣ Add Emergency Stop Gesture
+
+Example gesture: fist `[0,0,0,0,0]`
+
+### Code Change
+
+``` python
+def get_command(fingers):
+    if fingers == [0,0,0,0,0]: return 'S'
+    elif fingers == [0,1,0,0,0]: return 'F'
+    elif fingers == [0,1,1,0,0]: return 'B'
+    elif fingers == [0,1,0,0,1]: return 'L'
+    elif fingers == [0,1,1,1,1]: return 'R'
+    else: return 'S'
+```
+
+------------------------------------------------------------------------
+
+# 7️⃣ Increase Command Send Speed
+
+Current heartbeat:
+
+``` python
+if command != last_command or (current_time - last_send_time > 0.25):
+```
+
+Make faster response:
+
+``` python
+if command != last_command or (current_time - last_send_time > 0.1):
+```
+
+------------------------------------------------------------------------
+
+# 8️⃣ Display Gesture Name on Screen
+
+Add dictionary:
+
+``` python
+gesture_names = {
+    'F': "FORWARD",
+    'B': "BACKWARD",
+    'L': "LEFT",
+    'R': "RIGHT",
+    'S': "STOP"
+}
+```
+
+Display:
+
+``` python
+cv2.putText(img, gesture_names.get(command, "UNKNOWN"), (10,150),
+            cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),2)
+```
+
+------------------------------------------------------------------------
+
+# 9️⃣ Debug Mode for Judges
+
+Add print debugging:
+
+``` python
+print(f"Detected Fingers: {fingers}")
+print(f"Command Sent: {command}")
+```
+
+------------------------------------------------------------------------
+
+# 🔟 Offline Demo Mode
+
+If HC‑05 disconnects, robot still shows gestures.
+
+Modify send block:
+
+``` python
+if not connected:
+    print(f"Demo Mode Command: {command}")
+    return False
+```
+
+------------------------------------------------------------------------
+
+# 🧠 Competition Tip
+
+Judges mostly test only **3 concepts**:
+
+Input → Gesture Detection\
+Logic → if / else mapping\
+Output → Bluetooth command
+
+If you understand this chain, you can modify any robot command in
+seconds.
